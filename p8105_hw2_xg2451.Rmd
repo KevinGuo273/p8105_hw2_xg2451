@@ -1,0 +1,83 @@
+---
+title: "p8105_hw2_xg2451"
+author: "Xuanyu Guo"
+date: "2024-09-27"
+output: html_document
+---
+# Problem1
+```{r}
+library(dplyr)
+library(tidyr)
+setwd("/Users/kevin/Downloads/")
+# Load data
+data <- read.csv("NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
+
+# Select and clean the required columns
+clean_data <- data %>%
+  select(Line, Station.Name, Station.Latitude, Station.Longitude,
+         Route1:Route11, Entry, Vending, Entrance.Type, ADA) %>%
+  mutate(Entry = ifelse(Entry == "YES", TRUE, FALSE))
+```
+```{r}
+# Check dimensions and print a summary
+nrow(clean_data)
+ncol(clean_data)
+summary(clean_data)
+```
+The dataset contains variables related to NYC subway stations, including line, station name, station latitude and longitude, up to 11 routes served by each station, whether the entrance allows entry, whether there is a vending machine, the type of entrance, and ADA compliance. The data cleaning involved retaining relevant columns and converting the Entry variable from a character string to a logical variable. The resulting dataset has dimensions indicating the number of 1868 rows and 19 columns. The data structure has been arranged to meet the principles of tidy data.
+
+```{r}
+# Calculate the number of distinct stations
+distinct_stations <- clean_data %>%
+  distinct(Line, Station.Name) %>%
+  nrow()
+distinct_stations
+```
+There are 465 distinct stations.
+```{r}
+# Calculate how many stations are ADA compliant
+ada_compliant_stations <- clean_data %>%
+  filter(ADA == TRUE) %>%
+  distinct(Line, Station.Name) %>%
+  nrow()
+ada_compliant_stations
+```
+There are 84 ADA compliant stations.
+```{r}
+# Proportion of station entrances/exits without vending that allow entrance
+proportion_no_vending_entry <- clean_data %>%
+  filter(Vending == "NO") %>%
+  summarise(Proportion = mean(Entry))
+proportion_no_vending_entry
+```
+The proportion of station entrances / exits without vending allow entrance is approximately 0.3770.
+```{r}
+# Convert all Route types to character and all "" to NA
+clean_data <- clean_data %>%
+  mutate(across(starts_with("Route"), ~na_if(as.character(.), "")))
+# Reformat data
+reformat_data <- clean_data %>%
+  pivot_longer(cols = Route1:Route11, values_to = "Route", names_to = "Route_Num", values_drop_na = TRUE)
+```
+```{r}
+# Separate route numbers into distinct variables and calculate A train stations
+a_train_stations <- reformat_data %>%
+  filter(Route == "A") %>%
+  distinct(Line, Station.Name) %>%
+  nrow()
+a_train_stations
+# ADA compliant stations serving the A train
+a_train_ada_compliant <- reformat_data %>%
+  filter(Route == "A", ADA == TRUE) %>%
+  distinct(Line, Station.Name) %>%
+  nrow()
+a_train_ada_compliant
+```
+There are 60 distinct stations serve the A train, and 17 of them are ADA compliant.
+
+
+
+
+
+
+
