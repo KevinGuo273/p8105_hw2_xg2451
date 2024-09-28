@@ -383,47 +383,6 @@ nrow(clean_data)</code></pre>
 <pre><code>## [1] 1868</code></pre>
 <pre class="r"><code>ncol(clean_data)</code></pre>
 <pre><code>## [1] 19</code></pre>
-<pre class="r"><code>summary(clean_data)</code></pre>
-<pre><code>##      Line           Station.Name       Station.Latitude Station.Longitude
-##  Length:1868        Length:1868        Min.   :40.58    Min.   :-74.03   
-##  Class :character   Class :character   1st Qu.:40.69    1st Qu.:-73.99   
-##  Mode  :character   Mode  :character   Median :40.73    Median :-73.96   
-##                                        Mean   :40.73    Mean   :-73.94   
-##                                        3rd Qu.:40.77    3rd Qu.:-73.91   
-##                                        Max.   :40.90    Max.   :-73.76   
-##                                                                          
-##     Route1             Route2             Route3             Route4         
-##  Length:1868        Length:1868        Length:1868        Length:1868       
-##  Class :character   Class :character   Class :character   Class :character  
-##  Mode  :character   Mode  :character   Mode  :character   Mode  :character  
-##                                                                             
-##                                                                             
-##                                                                             
-##                                                                             
-##     Route5             Route6             Route7              Route8     
-##  Length:1868        Length:1868        Length:1868        Min.   :1.000  
-##  Class :character   Class :character   Class :character   1st Qu.:1.000  
-##  Mode  :character   Mode  :character   Mode  :character   Median :4.000  
-##                                                           Mean   :2.979  
-##                                                           3rd Qu.:5.000  
-##                                                           Max.   :5.000  
-##                                                           NA&#39;s   :1820   
-##      Route9         Route10        Route11       Entry        
-##  Min.   :2.000   Min.   :3      Min.   :7      Mode :logical  
-##  1st Qu.:2.000   1st Qu.:3      1st Qu.:7      FALSE:115      
-##  Median :2.000   Median :3      Median :7      TRUE :1753     
-##  Mean   :2.536   Mean   :3      Mean   :7                     
-##  3rd Qu.:2.000   3rd Qu.:3      3rd Qu.:7                     
-##  Max.   :5.000   Max.   :3      Max.   :7                     
-##  NA&#39;s   :1840    NA&#39;s   :1845   NA&#39;s   :1845                  
-##    Vending          Entrance.Type         ADA         
-##  Length:1868        Length:1868        Mode :logical  
-##  Class :character   Class :character   FALSE:1400     
-##  Mode  :character   Mode  :character   TRUE :468      
-##                                                       
-##                                                       
-##                                                       
-## </code></pre>
 <p>The dataset contains variables related to NYC subway stations,
 including line, station name, station latitude and longitude, up to 11
 routes served by each station, whether the entrance allows entry,
@@ -479,6 +438,64 @@ a_train_ada_compliant</code></pre>
 <pre><code>## [1] 17</code></pre>
 <p>There are 60 distinct stations serve the A train, and 17 of them are
 ADA compliant.</p>
+</div>
+<div id="problem2" class="section level1">
+<h1>Problem2</h1>
+<pre class="r"><code>library(readxl)
+setwd(&quot;/Users/kevin/Downloads/&quot;)
+# Read the data for Mr. Trash Wheel
+mr_trash_wheel &lt;- read_excel(&quot;Trash_Wheel_Collection_Data.xlsx&quot;, sheet = &quot;Mr. Trash Wheel&quot;) %&gt;%
+  select(-c(...15, ...16)) %&gt;%  # Assuming columns 15 and 16 are notes
+  filter(!is.na(Dumpster)) %&gt;%  # Remove rows without dumpster data
+  rename( # omit columns containing notes
+    Weight = &quot;Weight (tons)&quot;,
+    Volume = &quot;Volume (cubic yards)&quot;,
+    &quot;Homes Powered&quot; = &quot;Homes Powered*&quot;
+    ) %&gt;%
+  # round and convert the result to an integer variable
+  mutate(Year = as.numeric(Year),
+         Sports_Balls = as.integer(round(`Sports Balls`)),
+         Trash_Wheel = &quot;Mr. Trash Wheel&quot;)</code></pre>
+<pre><code>## New names:
+## • `` -&gt; `...15`
+## • `` -&gt; `...16`</code></pre>
+<pre class="r"><code># Read the data for Professor Trash Wheel
+prof_trash_wheel &lt;- read_excel(&quot;Trash_Wheel_Collection_Data.xlsx&quot;, sheet = &quot;Professor Trash Wheel&quot;) %&gt;%
+  filter(!is.na(Dumpster)) %&gt;%  # Remove rows without dumpster data
+  rename( # omit columns containing notes
+    Weight = &quot;Weight (tons)&quot;,
+    Volume = &quot;Volume (cubic yards)&quot;,
+    &quot;Homes Powered&quot; = &quot;Homes Powered*&quot;
+    ) %&gt;%
+  # keep track of which wheel
+  mutate(Trash_Wheel = &quot;Professor Trash Wheel&quot;)
+
+# Read the data for Gwynnda Trash Wheel
+gwynnda_trash_wheel &lt;- read_excel(&quot;Trash_Wheel_Collection_Data.xlsx&quot;, sheet = &quot;Gwynnda Trash Wheel&quot;) %&gt;%
+  filter(!is.na(Dumpster)) %&gt;%  # Remove rows without dumpster data
+  rename( # omit columns containing notes
+    Weight = &quot;Weight (tons)&quot;,
+    Volume = &quot;Volume (cubic yards)&quot;,
+    &quot;Homes Powered&quot; = &quot;Homes Powered*&quot;
+    ) %&gt;%
+  # keep track of which wheel
+  mutate(Trash_Wheel = &quot;Gwynnda Trash Wheel&quot;)</code></pre>
+<pre class="r"><code>combined_data &lt;- bind_rows(mr_trash_wheel, prof_trash_wheel, gwynnda_trash_wheel)
+                           
+# Total observations in the dataset
+total_observations &lt;- nrow(combined_data)
+# Total weight of trash collected by Professor Trash Wheel
+total_weight_prof &lt;- sum(prof_trash_wheel$Weight, na.rm = TRUE)
+# Total number of cigarette butts collected by Gwynnda in June 2022
+cigarette_butts_june2022 &lt;- sum(gwynnda_trash_wheel$`Cigarette Butts`[gwynnda_trash_wheel$Month == &quot;June&quot; &amp; gwynnda_trash_wheel$Year == 2022], na.rm = TRUE)</code></pre>
+<p>The combined dataset for Mr. Trash Wheel, Professor Trash Wheel, and
+Gwynnda consists of 845 observations, capturing various metrics of waste
+collected from Baltimore’s waterways. For instance, key variables
+include the weight of trash in tons and the number of specific waste
+items like cigarette butts and sports balls. In total, Professor Trash
+Wheel collected 216.26 tons of trash. In June 2022, Gwynnda collected
+18120 cigarette butts, indicating the substantial impact these devices
+have on reducing aquatic litter.</p>
 </div>
 
 

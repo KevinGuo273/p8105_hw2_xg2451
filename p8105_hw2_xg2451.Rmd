@@ -22,7 +22,6 @@ clean_data <- data %>%
 # Check dimensions and print a summary
 nrow(clean_data)
 ncol(clean_data)
-summary(clean_data)
 ```
 The dataset contains variables related to NYC subway stations, including line, station name, station latitude and longitude, up to 11 routes served by each station, whether the entrance allows entry, whether there is a vending machine, the type of entrance, and ADA compliance. The data cleaning involved retaining relevant columns and converting the Entry variable from a character string to a logical variable. The resulting dataset has dimensions indicating the number of 1868 rows and 19 columns. The data structure has been arranged to meet the principles of tidy data.
 
@@ -75,9 +74,55 @@ a_train_ada_compliant
 ```
 There are 60 distinct stations serve the A train, and 17 of them are ADA compliant.
 
+# Problem2
+```{r}
+library(readxl)
+setwd("/Users/kevin/Downloads/")
+# Read the data for Mr. Trash Wheel
+mr_trash_wheel <- read_excel("Trash_Wheel_Collection_Data.xlsx", sheet = "Mr. Trash Wheel") %>%
+  select(-c(...15, ...16)) %>%  # Assuming columns 15 and 16 are notes
+  filter(!is.na(Dumpster)) %>%  # Remove rows without dumpster data
+  rename( # omit columns containing notes
+    Weight = "Weight (tons)",
+    Volume = "Volume (cubic yards)",
+    "Homes Powered" = "Homes Powered*"
+    ) %>%
+  # round and convert the result to an integer variable
+  mutate(Year = as.numeric(Year),
+         Sports_Balls = as.integer(round(`Sports Balls`)),
+         Trash_Wheel = "Mr. Trash Wheel")
 
 
+# Read the data for Professor Trash Wheel
+prof_trash_wheel <- read_excel("Trash_Wheel_Collection_Data.xlsx", sheet = "Professor Trash Wheel") %>%
+  filter(!is.na(Dumpster)) %>%  # Remove rows without dumpster data
+  rename( # omit columns containing notes
+    Weight = "Weight (tons)",
+    Volume = "Volume (cubic yards)",
+    "Homes Powered" = "Homes Powered*"
+    ) %>%
+  # keep track of which wheel
+  mutate(Trash_Wheel = "Professor Trash Wheel")
 
-
-
-
+# Read the data for Gwynnda Trash Wheel
+gwynnda_trash_wheel <- read_excel("Trash_Wheel_Collection_Data.xlsx", sheet = "Gwynnda Trash Wheel") %>%
+  filter(!is.na(Dumpster)) %>%  # Remove rows without dumpster data
+  rename( # omit columns containing notes
+    Weight = "Weight (tons)",
+    Volume = "Volume (cubic yards)",
+    "Homes Powered" = "Homes Powered*"
+    ) %>%
+  # keep track of which wheel
+  mutate(Trash_Wheel = "Gwynnda Trash Wheel")
+```
+```{r}
+combined_data <- bind_rows(mr_trash_wheel, prof_trash_wheel, gwynnda_trash_wheel)
+                           
+# Total observations in the dataset
+total_observations <- nrow(combined_data)
+# Total weight of trash collected by Professor Trash Wheel
+total_weight_prof <- sum(prof_trash_wheel$Weight, na.rm = TRUE)
+# Total number of cigarette butts collected by Gwynnda in June 2022
+cigarette_butts_june2022 <- sum(gwynnda_trash_wheel$`Cigarette Butts`[gwynnda_trash_wheel$Month == "June" & gwynnda_trash_wheel$Year == 2022], na.rm = TRUE)
+```
+The combined dataset for Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda consists of `r total_observations` observations, capturing various metrics of waste collected from Baltimore's waterways. For instance, key variables include the weight of trash in tons and the number of specific waste items like cigarette butts and sports balls. In total, Professor Trash Wheel collected `r total_weight_prof` tons of trash. In June 2022, Gwynnda collected `r format(cigarette_butts_june2022)` cigarette butts, indicating the substantial impact these devices have on reducing aquatic litter.
