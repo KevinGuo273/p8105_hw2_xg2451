@@ -5,10 +5,10 @@ date: "2024-09-27"
 output: html_document
 ---
 # Problem1
-```{r}
+```{r message=FALSE}
 library(dplyr)
 library(tidyr)
-setwd("/Users/kevin/Downloads/")
+
 # Load data
 data <- read.csv("NYC_Transit_Subway_Entrance_And_Exit_Data.csv")
 
@@ -49,7 +49,7 @@ proportion_no_vending_entry <- clean_data %>%
   summarise(Proportion = mean(Entry))
 proportion_no_vending_entry
 ```
-The proportion of station entrances / exits without vending allow entrance is approximately 0.3770.
+The proportion of station entrances / exits without vending allow entrance is approximately 37.70%.
 ```{r}
 # Convert all Route types to character and all "" to NA
 clean_data <- clean_data %>%
@@ -75,9 +75,8 @@ a_train_ada_compliant
 There are 60 distinct stations serve the A train, and 17 of them are ADA compliant.
 
 # Problem2
-```{r}
+```{r message=FALSE}
 library(readxl)
-setwd("/Users/kevin/Downloads/")
 # Read the data for Mr. Trash Wheel
 mr_trash_wheel <- read_excel("Trash_Wheel_Collection_Data.xlsx", sheet = "Mr. Trash Wheel") %>%
   select(-c(...15, ...16)) %>%  # Assuming columns 15 and 16 are notes
@@ -95,24 +94,22 @@ mr_trash_wheel <- read_excel("Trash_Wheel_Collection_Data.xlsx", sheet = "Mr. Tr
 
 # Read the data for Professor Trash Wheel
 prof_trash_wheel <- read_excel("Trash_Wheel_Collection_Data.xlsx", sheet = "Professor Trash Wheel") %>%
-  filter(!is.na(Dumpster)) %>%  # Remove rows without dumpster data
-  rename( # omit columns containing notes
+  filter(!is.na(Dumpster)) %>%  
+  rename( 
     Weight = "Weight (tons)",
     Volume = "Volume (cubic yards)",
     "Homes Powered" = "Homes Powered*"
     ) %>%
-  # keep track of which wheel
   mutate(Trash_Wheel = "Professor Trash Wheel")
 
 # Read the data for Gwynnda Trash Wheel
 gwynnda_trash_wheel <- read_excel("Trash_Wheel_Collection_Data.xlsx", sheet = "Gwynnda Trash Wheel") %>%
-  filter(!is.na(Dumpster)) %>%  # Remove rows without dumpster data
-  rename( # omit columns containing notes
+  filter(!is.na(Dumpster)) %>%  
+  rename(
     Weight = "Weight (tons)",
     Volume = "Volume (cubic yards)",
     "Homes Powered" = "Homes Powered*"
     ) %>%
-  # keep track of which wheel
   mutate(Trash_Wheel = "Gwynnda Trash Wheel")
 ```
 ```{r}
@@ -120,9 +117,126 @@ combined_data <- bind_rows(mr_trash_wheel, prof_trash_wheel, gwynnda_trash_wheel
                            
 # Total observations in the dataset
 total_observations <- nrow(combined_data)
+total_observations
 # Total weight of trash collected by Professor Trash Wheel
 total_weight_prof <- sum(prof_trash_wheel$Weight, na.rm = TRUE)
+total_weight_prof
 # Total number of cigarette butts collected by Gwynnda in June 2022
 cigarette_butts_june2022 <- sum(gwynnda_trash_wheel$`Cigarette Butts`[gwynnda_trash_wheel$Month == "June" & gwynnda_trash_wheel$Year == 2022], na.rm = TRUE)
+cigarette_butts_june2022
 ```
 The combined dataset for Mr. Trash Wheel, Professor Trash Wheel, and Gwynnda consists of `r total_observations` observations, capturing various metrics of waste collected from Baltimore's waterways. For instance, key variables include the weight of trash in tons and the number of specific waste items like cigarette butts and sports balls. In total, Professor Trash Wheel collected `r total_weight_prof` tons of trash. In June 2022, Gwynnda collected `r format(cigarette_butts_june2022)` cigarette butts, indicating the substantial impact these devices have on reducing aquatic litter.
+
+# Problem3
+
+```{r results='hide'}
+library(readr)
+dat_bakers = read_csv("./gbb_datasets/bakers.csv") %>% 
+  janitor::clean_names() %>% 
+  separate(
+    baker_name, 
+    into = c("baker", "baker_last_name"), 
+    sep = " "
+  ) 
+
+dat_bakes = read_csv("./gbb_datasets/bakes.csv") %>% 
+  janitor::clean_names() %>% 
+  mutate(
+    baker = ifelse(baker == "\"Jo\"", "Jo", baker)
+  )
+
+dat_results = read_csv("./gbb_datasets/results.csv", skip = 2) %>% 
+  janitor::clean_names() %>% 
+  filter(!is.na(result)) %>% 
+  mutate(
+    baker = ifelse(baker == "Joanne", "Jo", baker)
+  )
+# check 
+anti_join(dat_bakers, dat_results)
+anti_join(dat_bakers, dat_bakes)
+# merge
+dat_merge1 = left_join(dat_results, dat_bakes) 
+dat_merge2 = left_join(dat_merge1, dat_bakers)
+# organize in meaningful orders
+dat_merge = dat_merge2 %>% 
+  distinct() %>% 
+  select(series, episode, baker, signature_bake, technical, result, 
+         show_stopper, everything())
+```
+```{r}
+# summary
+skimr::skim(dat_merge)
+# write csv
+write_csv(dat_merge, "./gbb_datasets/merge_data.csv")
+```
+
+**Cleaning progress:**
+
+- In dataset dat_bakers, the variable "baker_name" had different name and form 
+from other two datasets, so separate this variable into two columns "baker" and "baker_last_name".
+- In dataset dat_bakes, "Jo" in variable "baker" had a quotation marks, so remove it. 
+- In dataset dat_results, omit the first two useless rows and change "Joanne"
+in column "baker" to "Jo". 
+
+**Briefly Discussion:**
+
+There are 710 rows and 11 columns, including 7 character variables (eg. baker, signature_bake, result) and 4 numeric variables (eg. series, episode, technical). 
+Variables "signature_bake", "show_stopper" and "technical" have missing values.
+
+**Star bakers / Winners:**
+
+```{r}
+star_baker = dat_merge %>% 
+  filter(series >= 5 & series <= 10 & result %in% c("STAR BAKER", "WINNER")) %>% 
+  select(series, episode, result, baker) %>% 
+  arrange(series, episode)
+star_baker
+```
+  Overall Winners in every series:
+
+- Richard obtained 5 star baker in series 5.
+- Nadiya obtained 4 star baker in series 6. 
+- Candice obtained 4 star baker in series 7. 
+- Steven and Sophie both obtained 3 star baker in series 8. 
+- Rahul obtained 3 star baker in series 9. 
+- Steph obtained 4 star baker in series 10. 
+- **It is not surprising that they are winners.**
+
+**Viewers:**
+
+```{r}
+dat_viewers = read_csv("./gbb_datasets/viewers.csv") %>% 
+  janitor::clean_names()
+
+head(dat_viewers, 10) #the first 10 rows
+```
+
+```{r}
+# average viewership in Season 1
+average_1 = mean(dat_viewers$series_1, na.rm = TRUE) 
+average_1
+# Season 5
+average_5 = mean(dat_viewers$series_5, na.rm = TRUE)
+average_5
+```
+
+The average viewership in Season 1 is 2.77. 
+\
+The average viewership in Season 5 is 10.04. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
