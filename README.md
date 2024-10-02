@@ -1,5 +1,3 @@
-p8105_hw2_xg2451
-================
 Xuanyu Guo
 2024-09-27
 
@@ -430,3 +428,5 @@ average_5
 
 The average viewership in Season 1 is 2.77.  
 The average viewership in Season 5 is 10.04.
+=======
+>>>>>>> c67aaea5edae20f62e562c520a0b6249e4da9a27
