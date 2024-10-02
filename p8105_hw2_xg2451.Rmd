@@ -1,8 +1,11 @@
 ---
-title: "p8105_hw2_xg2451"
+output:
+  #pdf_document: default
+  #html_document: default
+  output: github_document
 author: "Xuanyu Guo"
 date: "2024-09-27"
-output: html_document
+title: "p8105_hw2_xg2451"
 ---
 # Problem1
 ```{r message=FALSE}
